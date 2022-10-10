@@ -1,12 +1,11 @@
-const xml_help = require('../helpers/xml')
-const common = require('../helpers/common')
-const jsscompress = require("js-string-compression")
-const zip = new jsscompress.Hauffman()
+import { deepCopy } from '../helpers/common';
+import { newCoordinate, bearing, bearingDiff, distanceMeters } from '../helpers/geometrics';
+import { jsscompress } from 'js-string-compression';
+const zip = new jsscompress.Hauffman();
 const accuracy = 100000 // for compression
 const bearingDegreesLimit = 10
-const met = require('../helpers/geometrics')
 
-const EnumGeoPoint =  {
+export const EnumGeoPoint =  {
     lat:0,
     lon:1,
     ele:2,
@@ -41,10 +40,10 @@ const PGGeoModel = {
     tracks:[]
 }
 
-const newGeoModel = () => {
-    return common.deepCopy(PGGeoModel)
+export const newGeoModel = () => {
+    return deepCopy(PGGeoModel)
 }
-const newGeoPoint = (latitude, longitude, elevation, timestamp) => {
+export const newGeoPoint = (latitude, longitude, elevation, timestamp) => {
     let ret = []
     ret.push(parseFloat(latitude))
     ret.push(parseFloat(longitude))
@@ -59,16 +58,16 @@ const newGeoPoint = (latitude, longitude, elevation, timestamp) => {
     return ret
 }
 
-const newGeoWaypoint = (name, desc, geopoint) => {
-    let ret = common.deepCopy(PGGeoWaypoint)
+export const newGeoWaypoint = (name, desc, geopoint) => {
+    let ret = deepCopy(PGGeoWaypoint)
     ret.name = name
     ret.desc = desc
     ret.point = geopoint
     return ret
 }
 
-const newGeoTrack = (name, desc, geopoints, ordinal) => {
-    let ret = common.deepCopy(PGGeoTrack)
+export const newGeoTrack = (name, desc, geopoints, ordinal) => {
+    let ret = deepCopy(PGGeoTrack)
     ret.name = name
     ret.desc = desc || ''
     ret.ordinal = ordinal || 0
@@ -76,7 +75,7 @@ const newGeoTrack = (name, desc, geopoints, ordinal) => {
     return ret
 }
 
-const PGGeoFromGPX = (gO) => {
+export const PGGeoFromGPX = (gO) => {
     gO = gO.gpx
     let m = newGeoModel()
     m.name = gO.metadata.name
@@ -127,7 +126,7 @@ const PGGeoFromGPX = (gO) => {
     return m
 }
 
-const PGGeoFromKML = (gO) => {
+export const PGGeoFromKML = (gO) => {
     gO = gO.kml.Document
     let m = newGeoModel()
 
@@ -168,7 +167,7 @@ const PGGeoFromKML = (gO) => {
     return m
 }
 
-const compressPointArray = (points) =>  {
+export const compressPointArray = (points) =>  {
     let ret = ''
     let first = undefined
     let latO = lonO = eleO = timeO = 0
@@ -207,7 +206,7 @@ const compressPointArray = (points) =>  {
     return base64data
 }
 
-const deCompressPointArray = (compressedPoints) =>  {
+export const deCompressPointArray = (compressedPoints) =>  {
     let buff = Buffer.from(compressedPoints, 'base64');
     let compPoints = buff.toString();
     let ret = []
@@ -237,7 +236,7 @@ const deCompressPointArray = (compressedPoints) =>  {
     return ret
 }
 
-const optimizationLevel = {
+export const optimizationLevel = {
     lossless:0,
     low: 1,    // at least 1m between points 
     medium: 2,  // at least 3m between points  
@@ -254,11 +253,11 @@ const exportOptions = {
     waypointStyle: {}
 }
 
-const newExportOptions = () => {
-    return common.deepCopy(exportOptions)
+export const newExportOptions = () => {
+    return deepCopy(exportOptions)
 }
     
-const optimizePointArray = (points, level) => { 
+export const optimizePointArray = (points, level) => { 
     //console.log(`Optimizing ${points.length} points - level ${Object.keys(optimizationLevel)[level]}`)
     if(!level || level === optimizationLevel.lossless) {
         return points
@@ -287,50 +286,35 @@ const optimizePointArray = (points, level) => {
             ret.push(points[i])
             continue
         }
-        const cBefore = met.newCoordinate(points[i-1][0],points[i-1][1])
-        const cCurrent = met.newCoordinate(points[i][0],points[i][1])
-        const cAfter = met.newCoordinate(points[i+1][0],points[i+1][1])
-        const b1 = met.bearing(cBefore,cCurrent)
-        const b2 = met.bearing(cCurrent,cAfter)
-        const currentAngle = met.bearingDiff(b1,b2)
+        const cBefore = newCoordinate(points[i-1][0],points[i-1][1])
+        const cCurrent = newCoordinate(points[i][0],points[i][1])
+        const cAfter = newCoordinate(points[i+1][0],points[i+1][1])
+        const b1 = bearing(cBefore,cCurrent)
+        const b2 = bearing(cCurrent,cAfter)
+        const currentAngle = bearingDiff(b1,b2)
         if(currentAngle > bearingDegreesLimit && currentAngle < (180.0-bearingDegreesLimit)) {
             ret.push(points[i])
         }
     }
     if(meterLimit>0) {
-        let lpoints = common.deepCopy(ret)
+        let lpoints = deepCopy(ret)
         ret = []
         let cBefore = {}
         for(let i=1; i<lpoints.length-1; i++) {
             if(i === 1 || i === lpoints.length-2) {
                 ret.push(lpoints[i])
-                cBefore = met.newCoordinate(lpoints[i][0],lpoints[i][1])
+                cBefore = newCoordinate(lpoints[i][0],lpoints[i][1])
                 continue
             }
-            const cCurrent = met.newCoordinate(lpoints[i][0],lpoints[i][1])
-            const d1 = met.distanceMeters(cBefore,cCurrent)
+            const cCurrent = newCoordinate(lpoints[i][0],lpoints[i][1])
+            const d1 = distanceMeters(cBefore,cCurrent)
             if(d1 > meterLimit) {
                 ret.push(lpoints[i])
-                cBefore = met.newCoordinate(lpoints[i][0],lpoints[i][1])
+                cBefore = newCoordinate(lpoints[i][0],lpoints[i][1])
             }
         }
     }
     //console.log({count:ret.length})
     return ret
-}
-
-module.exports = {
-    PGGeoFromGPX,
-    PGGeoFromKML,
-    newGeoModel,
-    newGeoWaypoint,
-    newGeoTrack,
-    newGeoPoint,
-    EnumGeoPoint,
-    compressPointArray,
-    deCompressPointArray,
-    optimizePointArray,
-    optimizationLevel,
-    newExportOptions
 }
 

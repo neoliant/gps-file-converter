@@ -1,7 +1,6 @@
-const common = require('../helpers/common')
-const pgmodel = require('../models/PGGeoModel')
+import { newGeoModel, newGeoPoint, newGeoWaypoint, newGeoTrack } from '../models/PGGeoModel';
 
-const dataFromModel = (model, options) => {
+export const dataFromModel = (model, options) => {
     if(!options) {
         options = mod.newExportOptions()
     }
@@ -53,7 +52,7 @@ const dataFromModel = (model, options) => {
     return JSON.stringify(ret)
 }
 
-const parseData = async(data) => {
+export const parseData = async(data) => {
     return new Promise((resolve, reject) =>{
         let gpsContent = undefined
         if(typeof data === 'string'){
@@ -65,21 +64,21 @@ const parseData = async(data) => {
             gpsContent = data
         }
         if(gpsContent) {
-            let content = pgmodel.newGeoModel()
+            let content = newGeoModel()
             gpsContent.features.forEach(f => {
                 if(f.geometry && f.geometry.type === 'Point') {
                     const coord = f.geometry.coordinates[0]
-                    let p = pgmodel.newGeoPoint(coord[0], coord[1])
-                    let wp = pgmodel.newGeoWaypoint(JSON.stringify(f.properties),'',p)
+                    let p = newGeoPoint(coord[0], coord[1])
+                    let wp = newGeoWaypoint(JSON.stringify(f.properties),'',p)
                     content.waypoints.push(wp)
                 }
                 if(f.geometry && f.geometry.type === 'LineString') {
                     const coords = f.geometry.coordinates
                     let points = []
                     coords.forEach(p => {
-                        points.push(pgmodel.newGeoPoint(p[0],p[1]))
+                        points.push(newGeoPoint(p[0],p[1]))
                     })
-                    let tl = pgmodel.newGeoTrack(JSON.stringify(f.properties),'',points)
+                    let tl = newGeoTrack(JSON.stringify(f.properties),'',points)
                     content.tracks.push(tl)
                 }
             })   
@@ -89,9 +88,4 @@ const parseData = async(data) => {
             return reject('Data could not be parsed')
         }  
     })
-}
-
-module.exports = {
-    dataFromModel,
-    parseData,
 }

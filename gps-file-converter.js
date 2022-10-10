@@ -1,208 +1,207 @@
-const fs = require('fs').promises
-const transGpx = require('./src/translators/translateGpx')
-const transPgt = require('./src/translators/translatePgt')
-const transKml = require('./src/translators/translateKml')
-const transGeo = require('./src/translators/translateGeoJSON')
-const admzip = require('adm-zip')
-const path = require('path')
-const fi = require('./src/helpers/fileinfo')
-const model = require('./src/models/PGGeoModel')
+import fs from 'fs/promises';
+import { parseData as gpxParseData, dataFromModel as gpxDataFromModel } from './src/translators/translateGpx';
+/* import { parseData as pgtParseData, parsePGTZ, dataFromModel as pgtDataFromModel } from './src/translators/translatePgt' */
+import { parseData as kmlParseData, dataFromModel as kmlDataFromModel } from './src/translators/translateKml';
+import { parseData as geoJSONParseData, dataFromModel as geoJSONDataFromModel } from './src/translators/translateGeoJSON';
+import admzip from 'adm-zip';
+import path from 'path';
+import { getFileData } from './src/helpers/fileinfo';
+import { newExportOptions, optimizationLevel } from './src/models/PGGeoModel';
 
 let content = {}
 let filetype = {}
 let filename_extension = ''
 
 const importFile = async (filePath, handler) => {
-    return new Promise((resolve, reject) =>{
+    return new Promise((resolve, reject) => {
         filename_extension = path.extname(filePath)
         getFileContent(filePath)
-        .then(c => {
-            filetype = fi.getFileData(c, filename_extension)
-            handler(c).then(() => {
-                return resolve()
+            .then(c => {
+                filetype = getFileData(c, filename_extension)
+                handler(c).then(() => {
+                    return resolve()
+                })
             })
-        })
-        .catch(e => {return reject(e)})
+            .catch(e => { return reject(e) })
     })
 }
 
 const getFileContent = async (filePath) => {
-    return new Promise((resolve, reject) =>{
+    return new Promise((resolve, reject) => {
         fs.readFile(filePath)
-        .then((c) => {
-            return resolve(c.toString())
-        })
-        .catch((e) => {return reject(e)})
+            .then((c) => {
+                return resolve(c.toString())
+            })
+            .catch((e) => { return reject(e) })
     })
 }
 
 const exportFile = async (filePath, contents) => {
-    return new Promise((resolve, reject) =>{
-        fs.writeFile(filePath,contents)
-        .then(c => {
-            return resolve()
-        })
-        .catch(e => {return reject(e)})
+    return new Promise((resolve, reject) => {
+        fs.writeFile(filePath, contents)
+            .then(c => {
+                return resolve()
+            })
+            .catch(e => { return reject(e) })
     })
 }
 const exportFileCompressed = async (filePath, filename, contentString) => {
     const zip = new admzip()
-	zip.addFile(filename, Buffer.from(contentString))
-	const zipContent = zip.toBuffer()
-    return exportFile(filePath,zipContent)
+    zip.addFile(filename, Buffer.from(contentString))
+    const zipContent = zip.toBuffer()
+    return exportFile(filePath, zipContent)
 }
 
-class PGGeo {
+export class PGGeo {
     constructor() {
     }
     // General
     importGeoFile = async (filePath) => {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
             filename_extension = path.extname(filePath)
             getFileContent(filePath)
-            .then(c => {
-                const fileinfo = fi.getFileData(c, filename_extension)
-                filetype = {
-                    ext: fileinfo.ext,
-                    desc: fileinfo.desc,
-                    format:fileinfo.format,
-                }
-                let handler = undefined
+                .then(c => {
+                    const fileinfo = getFileData(c, filename_extension)
+                    filetype = {
+                        ext: fileinfo.ext,
+                        desc: fileinfo.desc,
+                        format: fileinfo.format,
+                    }
+                    let handler = undefined
 
-                switch(fileinfo.ext) {
-                    case 'gpx': handler = this.parseGPX
-                        break
-                    case 'kml': handler = this.parseKML
-                        break
-                    case 'pgt': handler = this.parsePGT
-                        break
-                    case 'pgtz':
-                    case 'zip': handler = this.parsePGTZ  
-                        break
-                    case 'json': handler = this.parseGeoJSON
-                        break  
-                    default:
-                        return reject(`No handler available for filetype ${fileinfo.ext}`)
-                        
-                }
-                return handler(fileinfo.data).then(() => {
-                    return resolve({
-                        ...filetype,
-                        filename_ext: filename_extension
+                    switch (fileinfo.ext) {
+                        case 'gpx': handler = this.parseGPX
+                            break
+                        case 'kml': handler = this.parseKML
+                            break
+                        case 'pgt': handler = this.parsePGT
+                            break
+                        case 'pgtz':
+                        case 'zip': handler = this.parsePGTZ
+                            break
+                        case 'json': handler = this.parseGeoJSON
+                            break
+                        default:
+                            return reject(`No handler available for filetype ${fileinfo.ext}`)
+
+                    }
+                    return handler(fileinfo.data).then(() => {
+                        return resolve({
+                            ...filetype,
+                            filename_ext: filename_extension
+                        })
                     })
                 })
-            })
-            .catch(e => {return reject(e)})
+                .catch(e => { return reject(e) })
         })
     }
 
     stringify = async (type, options) => {
         return new Promise((resolve, reject) => {
+            let data = undefined;
             let handler = undefined
-            switch(type) {
-                case 'gpx': handler = transGpx || undefined
+            switch (type) {
+                case 'gpx': data = gpxDataFromModel(content, options)
                     break
-                case 'kml': handler = transKml || undefined
+                case 'kml': data = kmlDataFromModel(content, options)
                     break
-                case 'pgt': handler = transPgt || undefined
+                /* case 'pgt': data = pgtDataFromModel(content, options)
+                    break */
+                case 'json': data = geoJSONDataFromModel(content, options)
                     break
-                case 'json': handler = transGeo || undefined
-                    break  
                 default:
-                    return reject(`No handler available for stringify to format '${type}'`)    
+                    return reject(`No handler available for stringify to format '${type}'`)
             }
-            if(handler && handler.dataFromModel){
-                const data = handler.dataFromModel(content,options)
-                return resolve(data)
-            } 
-            return reject(`Handler for stringify to format '${type}' not implemented`)
-        })   
-    }
-    
-    // Garmin GPX files
-    importGPX = async (filePath) => {
-        return importFile(filePath,this.parseGPX)
-    }
-    parseGPX = async (data) => {
-        return transGpx.parseData(data)
-        .then(d => {
-            content = d
+            return resolve(data)
+            
+            //return reject(`Handler for stringify to format '${type}' not implemented`)
         })
     }
+
+    // Garmin GPX files
+    importGPX = async (filePath) => {
+        return importFile(filePath, this.parseGPX)
+    }
+    parseGPX = async (data) => {
+        return gpxParseData(data)
+            .then(d => {
+                content = d
+            })
+    }
     exportGPX = (filePath, options) => {
-        let c = transGpx.dataFromModel(content, options)
+        let c = gpxDataFromModel(content, options)
         return exportFile(filePath, c)
     }
 
     // Google KLM files
     importKML = (filePath) => {
-        return importFile(filePath,this.parseKML)
+        return importFile(filePath, this.parseKML)
     }
 
     parseKML = async (data) => {
-        return transKml.parseData(data)
-        .then(d => {
-            content = d
-        })
+        return kmlParseData(data)
+            .then(d => {
+                content = d
+            })
     }
     exportKML = (filePath, options) => {
-        let c = transKml.dataFromModel(content, options)
+        let c = kmlDataFromModel(content, options)
         return exportFile(filePath, c)
     }
 
     // GeoJSON
     importGeoJSON = (filePath) => {
-        return importFile(filePath,this.parseGeoJSON)
+        return importFile(filePath, this.parseGeoJSON)
     }
 
     parseGeoJSON = async (data) => {
-        return transGeo.parseData(data)
-        .then(d => {
-            content = d
-        })
+        return geoJSONParseData(data)
+            .then(d => {
+                content = d
+            })
     }
 
     exportGeoJSON = (filePath, options) => {
-        let c = transGeo.dataFromModel(content, options)
+        let c = geoJSONDataFromModel(content, options)
         return exportFile(filePath, c)
     }
 
     // PlaceGaze files
-    importPGT = (filePath) => {
-        return importFile(filePath,this.parsePGT)
+    /* importPGT = (filePath) => {
+        return importFile(filePath, this.parsePGT)
     }
     importPGTZ = (filePath) => {
         console.log(filePath)
     }
-    parsePGT = async(data) => {
-        return transPgt.parseData(data)
-        .then(d => {
-            content = d
-        })
+    parsePGT = async (data) => {
+        return pgtParseData(data)
+            .then(d => {
+                content = d
+            })
     }
-    parsePGTZ = async(data) => {
-        return transPgt.parsePGTZ(data)
-        .then(d => {
-            content = d
-        })
+    parsePGTZ = async (data) => {
+        return parsePGTZ(data)
+            .then(d => {
+                content = d
+            })
     }
 
     exportPGT = (filePath, options) => {
-        let c = transPgt.dataFromModel(content, options, true)
+        let c = pgtDataFromModel(content, options, true)
         return exportFile(filePath, c)
     }
     exportPGTZ = (filePath, options) => {
-        let fname = path.basename(filePath.toLowerCase(),'.zip') + '.pgt'
-        let c = transPgt.dataFromModel(content, options, true)
+        let fname = path.basename(filePath.toLowerCase(), '.zip') + '.pgt'
+        let c = pgtDataFromModel(content, options, true)
         return exportFileCompressed(filePath, fname, c)
-    }
+    } */
 
     newExportOptions = () => {
-        return model.newExportOptions()
+        return newExportOptions()
     }
 
-    optimizationLevel = model.optimizationLevel
-    
+    optimizationLevel = optimizationLevel
+
     getContent = () => {
         return content
     }
@@ -214,6 +213,3 @@ class PGGeo {
         }
     }
 }
-
-
-module.exports = PGGeo

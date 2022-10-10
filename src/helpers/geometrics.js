@@ -1,4 +1,4 @@
-const common = require('./common')
+import {deepCopy} from '../helpers/common'
 
 Number.prototype.compassValue = function() {
     var ret = parseFloat(this) % 360.0
@@ -21,21 +21,21 @@ const coordinate = {
     longitude: 0.0
 }
 
-const newCoordinate = (lat,lon) => {
-    let ret = common.deepCopy(coordinate)
+export const newCoordinate = (lat,lon) => {
+    let ret = deepCopy(coordinate)
     ret.latitude = lat
     ret.longitude = lon
     return ret
 }
 
-const bearing = (fromCoord, toCoord) => {
+export const bearing = (fromCoord, toCoord) => {
     const x = Math.cos(toCoord.latitude.radianValue()) * Math.sin((toCoord.longitude - fromCoord.longitude).radianValue())
     const y = Math.cos(fromCoord.latitude.radianValue()) * Math.sin(toCoord.latitude.radianValue()) - Math.sin(fromCoord.latitude.radianValue()) * Math.cos(toCoord.latitude.radianValue()) * Math.cos((toCoord.longitude - fromCoord.longitude).radianValue())
     const bearing = Math.atan2(x,y) * 180.0 / Math.PI
     return bearing
 
 }
-const bearingDiff = (b1,b2) => {
+export const bearingDiff = (b1,b2) => {
     ret = 0
     if(b1>b2) {
         ret = b1-b2
@@ -52,7 +52,7 @@ const bearingDiff = (b1,b2) => {
 /*
 This uses the ‘haversine’ formula to calculate the great-circle distance between two points – that is, the shortest distance over the earth’s surface – giving an ‘as-the-crow-flies’ distance between the points (ignoring any hills they fly over, of course!)
 */
-const distanceMeters = (fromCoord, toCoord) => {
+export const distanceMeters = (fromCoord, toCoord) => {
     const lat1 = fromCoord.latitude.radianValue()
     const lon1 = fromCoord.longitude.radianValue()
     const lat2 = toCoord.latitude.radianValue()
@@ -72,11 +72,4 @@ const distanceMeters = (fromCoord, toCoord) => {
 
     const d = R * c // in metres
     return d
-}
-
-module.exports = {
-    newCoordinate,
-    bearing,
-    bearingDiff,
-    distanceMeters
 }

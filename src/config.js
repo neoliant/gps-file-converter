@@ -20,7 +20,7 @@ const kml_meta = {
     }
 }
 
-const config = {
+export let config = {
     program:{
         name: 'gps-file-converter',
         version: '1.0.0'
@@ -28,5 +28,3 @@ const config = {
     gpx: gpx_meta,
     kml: kml_meta
 }
-
-module.exports = config

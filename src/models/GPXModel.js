@@ -1,5 +1,5 @@
-const common = require('../helpers/common') 
-const config = require('../config')
+import { deepCopy, XMLFromObj } from '../helpers/common';
+import { config } from '../config';
 
 const GpxTrack = {
     name:'',
@@ -37,8 +37,8 @@ const GpxModel = {
     }
 }
 
-const newGpxModel = () => {
-    let ret = common.deepCopy(GpxModel)
+export const newGpxModel = () => {
+    let ret = deepCopy(GpxModel)
     const meta = config.gpx
     Object.keys(meta).forEach(key => {
         ret.gpx[`@_${key}`] = meta[key]
@@ -47,8 +47,8 @@ const newGpxModel = () => {
     return ret
 }
 
-const newTrackPoint = (lat, lon, ele) => {
-    let pt = common.deepCopy(GpxTrackPoint)
+export const newTrackPoint = (lat, lon, ele) => {
+    let pt = deepCopy(GpxTrackPoint)
     pt['@_lat'] = lat
     pt['@_lon'] = lon
 
@@ -60,8 +60,8 @@ const newTrackPoint = (lat, lon, ele) => {
     return pt
 }
 
-const newTrack = (name, desc, points) => {
-    let ret = common.deepCopy(GpxTrack)
+export const newTrack = (name, desc, points) => {
+    let ret = deepCopy(GpxTrack)
     ret.name = name
     ret.desc = desc
     ret.trkseg.trkpt = points
@@ -69,11 +69,11 @@ const newTrack = (name, desc, points) => {
     return ret
 }
 
-const newWayPoint = (lat, lon, ele, name, time, sym) => {
+export const newWayPoint = (lat, lon, ele, name, time, sym) => {
     if(!sym) {
         sym = 'Flag, Orange'
     }
-    let ret = common.deepCopy(GpxWayPoint)
+    let ret = deepCopy(GpxWayPoint)
     ret['@_lat'] = lat
     ret['@_lon'] = lon
     ret.ele = ele
@@ -84,22 +84,13 @@ const newWayPoint = (lat, lon, ele, name, time, sym) => {
     return ret
 }
 
-const newLink = (url, text) => {
+export const newLink = (url, text) => {
     let ret = common.deepCopy(GpxLink)
     ret['@_href'] = url
     ret.text = text
     return ret
 }
 
-const toXML = (model) => {
-    return common.XMLFromObj(model)
-}
-
-module.exports = {
-    newGpxModel,
-    newTrackPoint,
-    newWayPoint,
-    newTrack,
-    newLink,
-    toXML
+export const toXML = (model) => {
+    return XMLFromObj(model)
 }

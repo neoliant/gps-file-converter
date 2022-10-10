@@ -1,6 +1,6 @@
-const common = require('../helpers/common') 
-const xml = require('../helpers/xml')
-const config = require('../config')
+import { deepCopy } from '../helpers/common';
+import { commentString } from '../helpers/xml';
+import { config } from '../config';
 
 const waypointStyleHeader = {
     IconStyle: {
@@ -62,58 +62,58 @@ const KmlModel = {
     }
 }
 
-const newWaypointStyle = (id) => {
-    let ret = common.deepCopy(styleMapHeader)
+export const newWaypointStyle = (id) => {
+    let ret = deepCopy(styleMapHeader)
     let sm = {}
     sm['@_id'] = id
-    let kp = common.deepCopy(waypointStyleMapPair)
+    let kp = deepCopy(waypointStyleMapPair)
     kp.key = 'normal'
     kp.styleUrl = `${id}-normal`
     sm.Pair =[]
     sm.Pair.push(kp)
-    kp = common.deepCopy(waypointStyleMapPair)
+    kp = deepCopy(waypointStyleMapPair)
     kp.key = 'highlight'
     kp.styleUrl = `${id}-highlight`
     sm.Pair.push(kp)
     ret.StyleMap.push(sm)
 
-    let s1 = common.deepCopy(waypointStyleHeader)
+    let s1 = deepCopy(waypointStyleHeader)
     s1['@_id'] = `${id}-normal`
     ret.Style.push(s1)
-    let s2 = common.deepCopy(waypointStyleHeader)
+    let s2 = deepCopy(waypointStyleHeader)
     s2['@_id'] = `${id}-highlight`
     ret.Style.push(s2)
 
     return ret
 }
 
-const newTrackStyle = (id, color, width) => {
+export const newTrackStyle = (id, color, width) => {
     if(!color) {
         color = config.kml.default.LineStyle.color
     }
     if(!width) {
         width = config.kml.default.LineStyle.width
     }
-    var ret = common.deepCopy(styleMapHeader)
+    var ret = deepCopy(styleMapHeader)
     let sm = {}
     sm['@_id'] = id
-    let kp = common.deepCopy(waypointStyleMapPair)
+    let kp = deepCopy(waypointStyleMapPair)
     kp.key = 'normal'
     kp.styleUrl = `${id}-normal`
     sm.Pair =[]
     sm.Pair.push(kp)
-    kp = common.deepCopy(waypointStyleMapPair)
+    kp = deepCopy(waypointStyleMapPair)
     kp.key = 'highlight'
     kp.styleUrl = `${id}-highlight`
     sm.Pair.push(kp)
     ret.StyleMap.push(sm)
 
-    let s1 = common.deepCopy(trackStyleHeader)
+    let s1 = deepCopy(trackStyleHeader)
     s1['@_id'] = `${id}-normal`
     s1.LineStyle.color = color
     s1.LineStyle.width = width
     ret.Style.push(s1)
-    let s2 = common.deepCopy(trackStyleHeader)
+    let s2 = deepCopy(trackStyleHeader)
     s2['@_id'] = `${id}-highlight`
     s2.LineStyle.color = color
     s2.LineStyle.width = width
@@ -122,13 +122,13 @@ const newTrackStyle = (id, color, width) => {
     return ret
 }
 
-const newKMLTrack = (name, desc, points,  styleId) => {
+export const newKMLTrack = (name, desc, points,  styleId) => {
     if(!styleId) {
         styleId = config.kml.default.LineStyleId
     }
-    let ret = common.deepCopy(KMLTrack)
-    ret.name = xml.commentString(name)
-    ret.description = xml.commentString(desc)
+    let ret = deepCopy(KMLTrack)
+    ret.name = commentString(name)
+    ret.description = commentString(desc)
     ret.styleUrl = `#${styleId}`
     let pointStr= ''
     points.forEach(p => {
@@ -139,13 +139,13 @@ const newKMLTrack = (name, desc, points,  styleId) => {
     return ret
 }
 
-const newKMLWaypoint = (name, desc, point, styleId) => {
+export const newKMLWaypoint = (name, desc, point, styleId) => {
     if(!styleId) {
         styleId = config.kml.default.LineStyleId
     }
-    let ret = common.deepCopy(KMLWaypoiny)
-    ret.name = xml.commentString(name)
-    ret.description = xml.commentString(desc)
+    let ret = deepCopy(KMLWaypoiny)
+    ret.name = commentString(name)
+    ret.description = commentString(desc)
     ret.styleUrl = `#${styleId}`
     let pointStr = `${point[1]},${point[0]},${point[2] || 0}\n`
 
@@ -155,16 +155,8 @@ const newKMLWaypoint = (name, desc, point, styleId) => {
 }
 
 
-const newKmlModel = () => {
-    let ret = common.deepCopy(KmlModel)
+export const newKmlModel = () => {
+    let ret = deepCopy(KmlModel)
     const meta = config.kml
     return ret
-}
-
-module.exports = {
-    newKmlModel,
-    newKMLTrack,
-    newKMLWaypoint,
-    newWaypointStyle,
-    newTrackStyle
 }

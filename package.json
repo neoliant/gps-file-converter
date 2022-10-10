@@ -18,10 +18,7 @@
     "geo",
     "maps"
   ],
-  "exports": "./gps-file-converter.js"
-  "scripts": {
-    "test": "echo \"Error: no test specified\""
-  },
+  "exports": "./gps-file-converter.js",
   "devDependencies": {
     "nodemon": "^2.0.15"
   },

@@ -1,6 +1,6 @@
-const { XMLParser, XMLBuilder, XMLValidator} = require('fast-xml-parser')
-const admzip = require('adm-zip')
-const path = require('path')
+import { XMLParser, XMLBuilder, XMLValidator } from 'fast-xml-parser';
+import admzip from 'adm-zip';
+import path from 'path';
 
 const filetypes = {
     gpx:{
@@ -30,7 +30,7 @@ const filetypes = {
 }
 
 
-const getFileData = (data, filename_extension) => {
+export const getFileData = (data, filename_extension) => {
     var ret = {
         ext: '',
         desc: 'Unknown geo file format',
@@ -79,8 +79,4 @@ const getFileData = (data, filename_extension) => {
 
     ret.data = gpsContent
     return ret
-}
-
-module.exports = {
-    getFileData
 }

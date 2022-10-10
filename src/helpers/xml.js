@@ -1,12 +1,7 @@
-const commentString = (str) => {
+export let commentString = (str) => {
     return `<![CDATA[${str}]]>`
 }
 
-const deCommentString = (str) => {
+export let deCommentString = (str) => {
     return str.replace('<![CDATA[','').replace(']]>','')
-}
-
-module.exports = {
-    commentString,
-    deCommentString
 }

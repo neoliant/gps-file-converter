@@ -1,35 +1,34 @@
-const { XMLParser, XMLBuilder, XMLValidator} = require('fast-xml-parser')
-const kmlmod = require('../models/KMLModel')
-const mod = require('../models/PGGeoModel')
-const common = require('../helpers/common')
-const xml = require('../helpers/xml')
-const config = require('../config')
+import { XMLParser, XMLBuilder, XMLValidator} from 'fast-xml-parser';
+import { newKmlModel, newWaypointStyle, newTrackStyle, newKMLTrack } from '../models/KMLModel';
+import { PGGeoFromKML, newExportOptions } from '../models/PGGeoModel';
+import { XMLFromObj } from '../helpers/common';
+import { commentString } from '../helpers/xml';
 
-const dataFromModel = (model, options) => {
+export const dataFromModel = (model, options) => {
     if(!options) {
-        options = mod.newExportOptions()
+        options = newExportOptions()
     }
-    let ret = kmlmod.newKmlModel()
+    let ret = newKmlModel()
     if(model.name) {
-        ret.kml.Document.name = xml.commentString(model.name)
+        ret.kml.Document.name = commentString(model.name)
     } else (
         delete ret.kml.Document.name
     )
     if(model.desc) {
-        ret.kml.Document.description = xml.commentString(model.desc)
+        ret.kml.Document.description = commentString(model.desc)
     } else {
         delete ret.kml.Document.description
     }
 
     if(!options.onlyTracks) {
         const wpStyleId = 'waypoint'
-        let style = kmlmod.newWaypointStyle(wpStyleId)
+        let style = newWaypointStyle(wpStyleId)
 
         ret.kml.Document.StyleMap.push(...style.StyleMap)
         ret.kml.Document.Style.push(...style.Style)
 
         model.waypoints.forEach(wp => {
-            let w = kmlmod.newKMLWaypoint(wp.name,wp.desc,wp.point,wpStyleId)
+            let w = newKMLWaypoint(wp.name,wp.desc,wp.point,wpStyleId)
             ret.kml.Document.Placemark.push(w)
         })
     }
@@ -39,20 +38,20 @@ const dataFromModel = (model, options) => {
         model.tracks.forEach(tr => {
             if(tr.points.length > 0) {
                 const trStyleId = `waytogo_${nr}`
-                let tstyle = kmlmod.newTrackStyle(trStyleId,'Red')
+                let tstyle = newTrackStyle(trStyleId,'Red')
                 ret.kml.Document.StyleMap.push(...tstyle.StyleMap)
                 ret.kml.Document.Style.push(...tstyle.Style)
                 
-                let pt = kmlmod.newKMLTrack(tr.name,tr.desc,tr.points,trStyleId)
+                let pt = newKMLTrack(tr.name,tr.desc,tr.points,trStyleId)
                 ret.kml.Document.Placemark.push(pt)
                 nr++
             }
         })
     }
-    return common.XMLFromObj(ret)
+    return XMLFromObj(ret)
 }
 
-const parseData = async(data) => {
+export const parseData = async(data) => {
     return new Promise((resolve, reject) =>{
         let content = {}
         let gpsContent = undefined
@@ -67,15 +66,10 @@ const parseData = async(data) => {
         }
         
         if(gpsContent) {
-            content = mod.PGGeoFromKML(gpsContent)
+            content = PGGeoFromKML(gpsContent)
             return resolve(content)
         } else {
             return reject('Data could not be parsed')
         }
     })
-}
-
-module.exports = {
-    dataFromModel,
-    parseData
 }

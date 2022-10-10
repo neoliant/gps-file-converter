@@ -1,13 +1,14 @@
-const crypto = require('crypto')
-const Readable = require('stream').Readable
-const { XMLParser, XMLBuilder, XMLValidator} = require('fast-xml-parser')
+import crypto from 'crypto';
+import Readable from 'stream';
+//const Readable = require('stream').Readable
+import { XMLParser, XMLBuilder, XMLValidator } from 'fast-xml-parser';
 
-const deepCopy = (obj) => {
+export const deepCopy = (obj) => {
     let ret = JSON.parse(JSON.stringify(obj))
     return ret
 }
 
-const zeroFill = (num, pos) => {
+export const zeroFill = (num, pos) => {
     let ret = ''
     var s = num.toString()
     var arr = s.split('')
@@ -19,7 +20,7 @@ const zeroFill = (num, pos) => {
     return ret
 }
 
-const getFileHash =  (fileStr) => {
+export const getFileHash =  (fileStr) => {
     return new Promise((resolve,reject) => {
         try {
             const output = crypto.createHash('md5')
@@ -37,7 +38,7 @@ const getFileHash =  (fileStr) => {
     })     
 }
 
-const asyncForEach = async (array, handlerfunction) => {
+export const asyncForEach = async (array, handlerfunction) => {
     return new Promise(async (resolve,reject) => {
       if(array) {
         for (let index = 0; index < array.length; index++) {
@@ -52,7 +53,7 @@ const asyncForEach = async (array, handlerfunction) => {
     })
 }
 
-const XMLFromObj = (obj, nodeName, wrapperName, forceXML) => {
+export const XMLFromObj = (obj, nodeName, wrapperName, forceXML) => {
     const XMLHeader = '<?xml version="1.0" encoding="utf-8"?>\n'
     const options = {
         ignoreAttributes : false,
@@ -86,12 +87,4 @@ const XMLFromObj = (obj, nodeName, wrapperName, forceXML) => {
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     return xmlRet
-}
-
-module.exports = {
-    deepCopy,
-    zeroFill,
-    getFileHash,
-    asyncForEach,
-    XMLFromObj
 }

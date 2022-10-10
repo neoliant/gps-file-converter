@@ -1,13 +1,12 @@
-const GFC = require('../gps-file-converter')
-const geo = new GFC()
-const model = require('../src/models/PGGeoModel')
-const gpxmod = require('../src/models/GPXModel')
-const tpg = require('../src/translators/translatePgt')
-const ft = require('../src/helpers/fileinfo')
-const common = require('../src/helpers/common')
-
-const xmlTool = require('../src/helpers/xml')
-const met = require('../src/helpers/geometrics')
+import GFC from '../gps-file-converter';
+import model from '../src/models/PGGeoModel';
+import gpxmod from '../src/models/GPXModel';
+import tpg from '../src/translators/translatePgt';
+import ft from '../src/helpers/fileinfo';
+import common from '../src/helpers/common';
+import xmlTool from '../src/helpers/xml';
+import met from '../src/helpers/geometrics'
+const geo = new GFC();
 
 
 

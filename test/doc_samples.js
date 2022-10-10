@@ -1,6 +1,8 @@
-const GFC = require('../gps-file-converter')
+import GFC from '../gps-file-converter'
+
+//const GFC = require('../gps-file-converter')
 // const GFC = require('gps-file-converter')
-const gfc = new GFC()
+const gfc = new GFC();
 
 
 // Input

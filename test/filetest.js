@@ -1,9 +1,8 @@
-const GFC = require('../gps-file-converter')
+import GFC from '../gps-file-converter';
+import { readdirSync, rmSync } from 'fs';
+import path from 'path';
+import {asyncForEach} from '../src/helpers/common';
 const geo = new GFC()
-const { readdirSync, rmSync } = require('fs')
-const path = require('path')
-
-const {asyncForEach} = require('../src/helpers/common')
 
 const infile_path = './Files/Test'
 const outfile_path = './Files/Test/out'
